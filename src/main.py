@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
 
         # Retrieve the current price of BTC/USDT from the Binance API
         url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
-        
+
         try:
             response = requests.get(url)
             response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
@@ -206,9 +206,14 @@ class MainWindow(QMainWindow):
         save_wallets(self.data)
 
     def last_tnx(self, address):
-        response = requests.get(
-            f"https://blockchain.info/multiaddr?active={address}&n=1"
-        )
+        try:
+            response = requests.get(
+                f"https://blockchain.info/multiaddr?active={address}&n=1"
+            )
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"An error occurred while making a request to the server: {e}")
+            return "Error"
 
         if response.status_code == 200:
             data = response.json()

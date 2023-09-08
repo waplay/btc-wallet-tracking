@@ -1,31 +1,25 @@
 #!/usr/bin/env python3
 
-# sudo apt install python3-venv
 # python3 -m venv venv
-# source venv/bin/activate (. venv/bin/activate)
+# source venv/bin/activate
 # pip install -r requirements.txt
 # pip freeze > requirements.txt
 
-# PyQt
-# pip install PyQt5
-# pyuic5 input.ui -o output.py
-
 import datetime
-import json
 import os
 import shutil
 import sys
 import requests
 import time
 
-# Need for snap.
+# Need for snap
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QHeaderView, QAction
 from PyQt5.QtGui import QIcon
 
-from utils.file_utils import get_path, get_path_wallets
+from utils.file_utils import get_path, save_wallets, get_wallets
 from dialog_about import AboutDialog
 from dialog_add import DialogAdd
 from dialog_donate import DonateDialog
@@ -33,18 +27,20 @@ from table_model import WalletsTableModel
 
 SATOSHI = 100000000
 
-if 'SNAP' in os.environ:
-    snap_data_file = os.path.join(os.environ['SNAP_USER_DATA'], 'wallets.json')
-    snap_file = os.path.join(os.environ['SNAP'], 'wallets.json')
+# Need for snap.
+if "SNAP" in os.environ:
+    snap_data_file = os.path.join(os.environ["SNAP_USER_DATA"], "wallets.json")
+    snap_file = os.path.join(os.environ["SNAP"], "wallets.json")
 
     if not os.path.exists(snap_data_file):
         shutil.copyfile(snap_file, snap_data_file)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi(get_path(__file__, "ui/main.ui"), self)
-        self.setWindowIcon(QIcon("src/images/logo.png"))
+        self.setWindowIcon(QIcon(get_path(__file__, "images/logo.png")))
         self.btnAdd.clicked.connect(self.add_wallet)
         self.btnDelete.clicked.connect(self.delete_wallet)
         self.btnDelete.setEnabled(False)
@@ -91,27 +87,24 @@ class MainWindow(QMainWindow):
         and updating the corresponding data in the "wallets.json" file.
         """
         # Read the wallet data from the "wallets.json" file
-        with open(get_path_wallets(__file__), "r") as f:
-            data = json.load(f)
-            addresses = [wallet["address"] for wallet in data["addresses"]]
-
-        # Uncomment if API Binance is down
-        # url = "https://cex.io/api/last_price/BTC/USD"
-        # response = requests.get(url)
-        # price = response.json()["lprice"]
-        # data["price"] = float(price)
+        data = get_wallets()
+        addresses = [wallet["address"] for wallet in data["addresses"]]
 
         # Retrieve the current price of BTC/USDT from the Binance API
         url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
-        response = requests.get(url)
-        price = response.json()["price"]
-        data["price"] = float(price)
-
-        # Update the wallet data with the current price and timestamp
-        prev_update = data["last_update"]
-        timestamp = int(time.time())
-        data["prev_update"] = prev_update
-        data["last_update"] = timestamp
+        
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
+        except requests.RequestException as e:
+            print(f"An error occurred while making a request to the server: {e}")
+            QMessageBox.warning(
+                self, "Error", "An error occurred while making a request to the server"
+            )
+            return
+        else:
+            price = response.json()["price"]
+            data["price"] = float(price)
 
         # Create a string of addresses separated by "|" for the API request
         address_str = "|".join(addresses)
@@ -140,9 +133,7 @@ class MainWindow(QMainWindow):
                     wallet["change"] = change
                     break
 
-        # Write the updated wallet data back to the "wallets.json" file
-        with open(get_path_wallets(__file__), "w") as f:
-            json.dump(data, f)
+        save_wallets(data)
 
         # Update the model with the updated data
         self.data = data
@@ -151,7 +142,7 @@ class MainWindow(QMainWindow):
     def sortByColumn(self, column):
         self.tableView.clearSelection()
         self.show_details(reset=True)
-        
+
         order = self.tableView.horizontalHeader().sortIndicatorOrder()
         self.tableView.sortByColumn(column, order)
 
@@ -190,10 +181,12 @@ class MainWindow(QMainWindow):
     def delete_wallet(self):
         self.tableView.clearSelection()
         self.show_details(reset=True)
-        
+
         index = self.tableView.selectionModel().currentIndex()
         if index.isValid():
-            returnValue = self.show_confirmation_dialog("Are you sure you want to delete this wallet?")
+            returnValue = self.show_confirmation_dialog(
+                "Are you sure you want to delete this wallet?"
+            )
             if returnValue == QMessageBox.Yes:
                 self.remove_wallet(index.row())
 
@@ -209,17 +202,19 @@ class MainWindow(QMainWindow):
         del self.data["addresses"][row]
         self.model.refresh(self.data["addresses"])
         self.show_details(reset=True)
-        with open(get_path_wallets(__file__), "w") as f:
-            json.dump(self.data, f)
+
+        save_wallets(self.data)
 
     def last_tnx(self, address):
-        response = requests.get(f"https://blockchain.info/multiaddr?active={address}&n=1")
+        response = requests.get(
+            f"https://blockchain.info/multiaddr?active={address}&n=1"
+        )
 
         if response.status_code == 200:
             data = response.json()
-            last_transaction = data['txs'][0]
+            last_transaction = data["txs"][0]
 
-            timestamp = last_transaction['time']
+            timestamp = last_transaction["time"]
             date = datetime.datetime.fromtimestamp(timestamp)
 
             return date
@@ -227,11 +222,13 @@ class MainWindow(QMainWindow):
             print(f"Failed to get last_tnx, status code: {response.status_code}")
             return "Error"
 
+
 def main():
     app = QApplication([])
     window = MainWindow()
     window.show()
     app.exec_()
+
 
 if __name__ == "__main__":
     main()

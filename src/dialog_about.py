@@ -12,5 +12,5 @@ class AboutDialog(QDialog):
         uic.loadUi(get_path(__file__, "ui/dialog_about.ui"), self)
 
         self.labelVersion.setText(f"Version: {__version__}")
-        pixmap = QPixmap('src/images/logo.png')
+        pixmap = QPixmap(get_path(__file__, "images/logo.png"))
         self.labelLogo.setPixmap(pixmap)

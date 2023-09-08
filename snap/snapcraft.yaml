@@ -20,8 +20,6 @@ architectures:
 apps:
   btc-wallet-tracking:
     command: snap/command-chain/desktop-launch $SNAP/bin/btc-wallet-tracking
-    # environment:
-      # PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/src
     plugs:
       - network
 

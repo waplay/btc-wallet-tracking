@@ -2,6 +2,6 @@
 Name=BTC Wallet Tracking
 Exec=btc-wallet-tracking
 Icon=${SNAP}/meta/gui/logo.png
-Terminal=true
+Terminal=false
 Type=Application
 Categories=Finances;

@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.pyp/
+*.egg-info/
+dist/
+build/
+
+# If using setuptools and/or distutils, put
+# setuptools build folder(s) here.
+# If using pipenv, put `Pipfile.lock` here
+# as well (uncomment line below).
+# build/
+Pipfile.lock
+venv/
+temporary_files/

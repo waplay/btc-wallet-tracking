@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=BTC Wallet Tracking
+Exec=btc-wallet-tracking
+Icon=${SNAP}/meta/gui/logo.png
+Terminal=true
+Type=Application
+Categories=Finances;

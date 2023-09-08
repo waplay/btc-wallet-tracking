@@ -13,26 +13,32 @@
 import datetime
 import json
 import os
+import shutil
 import sys
 import requests
 import time
 
-# Insert the path of the current directory at the front of sys.path
-# This allows Python to import modules from the current directory first
-# before looking in other system paths. Need for snap.
+# Need for snap.
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QHeaderView, QAction
 from PyQt5.QtGui import QIcon
 
-from utils.file_utils import get_path
+from utils.file_utils import get_path, get_path_wallets
 from dialog_about import AboutDialog
 from dialog_add import DialogAdd
 from dialog_donate import DonateDialog
 from table_model import WalletsTableModel
 
 SATOSHI = 100000000
+
+if 'SNAP' in os.environ:
+    snap_data_file = os.path.join(os.environ['SNAP_USER_DATA'], 'wallets.json')
+    snap_file = os.path.join(os.environ['SNAP'], 'wallets.json')
+
+    if not os.path.exists(snap_data_file):
+        shutil.copyfile(snap_file, snap_data_file)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -85,7 +91,7 @@ class MainWindow(QMainWindow):
         and updating the corresponding data in the "wallets.json" file.
         """
         # Read the wallet data from the "wallets.json" file
-        with open(get_path(__file__, "wallets.json"), "r") as f:
+        with open(get_path_wallets(__file__), "r") as f:
             data = json.load(f)
             addresses = [wallet["address"] for wallet in data["addresses"]]
 
@@ -135,7 +141,7 @@ class MainWindow(QMainWindow):
                     break
 
         # Write the updated wallet data back to the "wallets.json" file
-        with open(get_path(__file__, "wallets.json"), "w") as f:
+        with open(get_path_wallets(__file__), "w") as f:
             json.dump(data, f)
 
         # Update the model with the updated data
@@ -203,7 +209,7 @@ class MainWindow(QMainWindow):
         del self.data["addresses"][row]
         self.model.refresh(self.data["addresses"])
         self.show_details(reset=True)
-        with open(get_path(__file__, "wallets.json"), "w") as f:
+        with open(get_path_wallets(__file__), "w") as f:
             json.dump(self.data, f)
 
     def last_tnx(self, address):

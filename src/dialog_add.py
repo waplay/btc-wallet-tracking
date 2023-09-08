@@ -4,7 +4,7 @@ import requests
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
-from utils.file_utils import get_path
+from utils.file_utils import get_path, get_path_wallets
 
 
 class DialogAdd(QDialog):
@@ -39,12 +39,12 @@ class DialogAdd(QDialog):
                 "change": 0
             }
 
-            with open(get_path(__file__, "wallets.json"), "r") as f:
+            with open(get_path_wallets(__file__), "r") as f:
                 data = json.load(f)
 
             data["addresses"].append(wallet)
 
-            with open(get_path(__file__, "wallets.json"), "w") as f:
+            with open(get_path_wallets(__file__), "w") as f:
                 json.dump(data, f)
 
             self.parent.refresh_data()

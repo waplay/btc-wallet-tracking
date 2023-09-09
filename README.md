@@ -1,3 +1,5 @@
+[![btc-wallet-tracking](https://snapcraft.io/btc-wallet-tracking/badge.svg)](https://snapcraft.io/btc-wallet-tracking)
+
 # Wallet Tracking App
 
 This is a simple wallet tracking app built with Python and PyQt. It allows you to track Bitcoin wallets by saving their public addresses and viewing their transaction history and balance.
